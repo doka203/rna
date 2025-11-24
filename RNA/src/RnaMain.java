@@ -65,7 +65,7 @@ public class RnaMain {
                         treinar(redeNeural, baseRobo, epocas);
                         break;
                     case 5:
-                        double[][][] baseSkin = LeitorSkin.lerBase("RNA/src/Skin_NonSkin.txt");
+                        double[][][] baseSkin = LeitorSkin.lerBase("RNA/data/Skin_NonSkin.txt");
                         LeitorSkin baseSeparadaSkin = LeitorSkin.separarBase(baseSkin);
                         if (baseSeparadaSkin != null) {
                             System.out.print("\nQuantidade de neurônios na camada intermediária (qtdH): ");
@@ -77,7 +77,7 @@ public class RnaMain {
                         }
                         break;
                     case 6:
-                        double[][][] baseAbalone = LeitorAbalone.lerBaseOrdenada("RNA/src/abalone/abalone.data");
+                        double[][][] baseAbalone = LeitorAbalone.lerBaseOrdenada("RNA/data/abalone/abalone.data");
                         LeitorAbalone baseSeparadaAbalone = LeitorAbalone.separarBase(baseAbalone);
                         if (baseSeparadaAbalone != null) {
                             System.out.print("\nQuantidade de neurônios na camada intermediária (qtdH): ");
