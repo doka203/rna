@@ -1,13 +1,16 @@
+package src;
+
 import java.util.Random;
 
-public class Mlp implements RNA{
+public class Mlp {
     private double[][] wh, wo; // Pesos da rede
-    private final double ni = 0.05; // Taxa de aprendizado
+    private final double ni = 0.001; // Taxa de aprendizado
+
     /*
-    qtdIn: quantidade de neuronios na camada de entrada
-    qtdH: quantidade de neuronios na camada intermediaria
-    qtdOut: quantidade de neuronios na camada de saida
-    */
+     * qtdIn: quantidade de neuronios na camada de entrada
+     * qtdH: quantidade de neuronios na camada intermediaria
+     * qtdOut: quantidade de neuronios na camada de saida
+     */
     private final int qtdIn, qtdH, qtdOut;
     private static final Random random = new Random();
 
@@ -33,14 +36,11 @@ public class Mlp implements RNA{
     }
 
     // Realiza o treinamento de uma amostra, ajustando os pesos
-    @Override
     public double[] treinar(double[] xin, double[] y) {
         double[] x = new double[xin.length + 1]; // Xin + bias
-
         for (int i = 0; i < xin.length; i++) {
             x[i] = xin[i];
         }
-
         x[x.length - 1] = 1; // Xin + bias
 
         // Saida da camada hidden (intermediaria)
@@ -67,8 +67,10 @@ public class Mlp implements RNA{
 
         // Calcular o delta camada de saida
         double[] deltaO = new double[this.qtdOut];
-        for (int j = 0; j < this.qtdOut; j++) { // j = 0 ou 1?
-            deltaO[j] = out[j] * (1 - out[j]) * (y[j] - out[j]);
+        int sinal;
+        for (int j = 0; j < this.qtdOut; j++) {
+            sinal = (y[j] - out[j]) >= 0 ? 1 : -1;
+            deltaO[j] = out[j] * (1 - out[j]) * Math.pow((y[j] - out[j]), 2) * sinal;
         }
 
         // Calcula a variação dos pesos
@@ -95,7 +97,37 @@ public class Mlp implements RNA{
                 wh[i][h] += this.ni * deltaH[h] * x[i];
             }
         }
+        return out;
+    }
 
+    public double[] testar(double[] xin, double[] y) {
+        double[] x = new double[xin.length + 1]; // Xin + bias
+        for (int i = 0; i < xin.length; i++) {
+            x[i] = xin[i];
+        }
+        x[x.length - 1] = 1; // Xin + bias
+
+        // Saida da camada hidden (intermediaria)
+        double[] H = new double[this.qtdH + 1];
+        double u;
+        for (int h = 0; h < this.wh[0].length; h++) {
+            u = 0;
+            for (int i = 0; i < wh.length; i++) {
+                u += x[i] * wh[i][h];
+            }
+            H[h] = 1.0 / (1.0 + Math.exp(-u));
+        }
+        H[H.length - 1] = 1; // Bias
+
+        // Saida da camada out
+        double[] out = new double[this.qtdOut];
+        for (int j = 0; j < this.wo[0].length; j++) {
+            u = 0;
+            for (int h = 0; h < this.wo.length; h++) {
+                u += H[h] * wo[h][j];
+            }
+            out[j] = 1.0 / (1.0 + Math.exp(-u));
+        }
         return out;
     }
 }

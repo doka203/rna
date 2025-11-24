@@ -1,12 +1,19 @@
+package src;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-public class LeitorBase {
+public class LeitorSkin {
+    public double[][][] baseTreino;
+    public double[][][] baseTeste;
+
+    public LeitorSkin(double[][][] baseTreino, double[][][] baseTeste) {
+        this.baseTreino = baseTreino;
+        this.baseTeste = baseTeste;
+    }
 
     public static double[][][] lerBase(String caminhoArquivo) {
         List<double[][]> baseList = new ArrayList<>();
@@ -19,18 +26,19 @@ public class LeitorBase {
 
                 if (valores.length == 4) {
                     // Pega os 3 primeiros valores (B, G, R) e normaliza
-                    double[] entradas = new double[3];
-                    entradas[0] = Double.parseDouble(valores[0]) / 255.0;
-                    entradas[1] = Double.parseDouble(valores[1]) / 255.0;
-                    entradas[2] = Double.parseDouble(valores[2]) / 255.0;
+                    double[] entradas = new double[valores.length - 1];
+                    for (int i = 0; i < entradas.length; i++) {
+                        entradas[i] = Double.parseDouble(valores[i]) / 255.0;
+                    }
 
                     double[] saidas = new double[1];
-                    // Converte a classe 2 para 0 e se for 1, mantém 1
-                    if (Double.parseDouble(valores[3]) == 2) {
-                        saidas[0] = 0.0;
-                    } else {
-                        saidas[0] = 1.0;
-                    }
+                    // Converte a classe 2 para 0.005 e se for 1, converte para 0.995
+                    saidas[0] = Double.parseDouble(valores[3]) == 2 ? 0.005 : 0.995;
+
+                    // double[] saidas = new double[2];
+                    // // Converte a classe 2 (1,0) para [0.995, 0.005] e se for 1 (0,1), converte para [0.005, 0.995]
+                    // saidas[0] = Double.parseDouble(valores[3]) == 2 ? 0.995 : 0.005;
+                    // saidas[1] = Double.parseDouble(valores[3]) == 2 ? 0.005 : 0.995;
 
                     baseList.add(new double[][] { entradas, saidas });
                 }
@@ -43,33 +51,7 @@ public class LeitorBase {
         return baseList.toArray(new double[0][][]);
     }
 
-    public static double[][][] lerBaseOrdenada(String caminhoArquivo, boolean ordenar) {
-        double[][][] base = lerBase(caminhoArquivo);
-
-        if (base != null && ordenar) {
-            // Ordena a base de dados pela coluna de saída (crescente)
-            Arrays.sort(base, (amostra1, amostra2) -> Double.compare(amostra1[1][0], amostra2[1][0]));
-        }
-
-        return base;
-    }
-
-    public static class BaseSeparada {
-        public double[][][] baseTreino;
-        public double[][][] baseTeste;
-
-        public BaseSeparada(double[][][] baseTreino, double[][][] baseTeste) {
-            this.baseTreino = baseTreino;
-            this.baseTeste = baseTeste;
-        }
-    }
-
-    public static BaseSeparada separarBase(String caminhoArquivo) {
-        double[][][] baseCompleta = lerBase(caminhoArquivo);
-        return separarBase(baseCompleta);
-    }
-
-    public static BaseSeparada separarBase(double[][][] baseCompleta) {
+    public static LeitorSkin separarBase(double[][][] baseCompleta) {
         if (baseCompleta == null) {
             return null;
         }
@@ -80,7 +62,7 @@ public class LeitorBase {
 
         for (int i = 0; i < baseCompleta.length; i++) {
             double[][] amostra = baseCompleta[i];
-            if (amostra[1][0] == 0.0) {
+            if (amostra[1][0] == 0.005) {
                 classe0.add(amostra);
             } else {
                 classe1.add(amostra);
@@ -119,14 +101,6 @@ public class LeitorBase {
         double[][][] baseTreino = treinoList.toArray(new double[0][][]);
         double[][][] baseTeste = testeList.toArray(new double[0][][]);
 
-        /*
-         * Base separada aleatoriamente: 245057 amostras total
-         * - Classe 0 (não-pele): 194198 total (145649 treino, 48549 teste)
-         * - Classe 1 (pele): 50859 total (38144 treino, 12715 teste)
-         * Base de treino: 183793 amostras (75,0%) - selecionadas aleatoriamente
-         * Base de teste: 61264 amostras (25,0%) - selecionadas aleatoriamente
-         */
-
-        return new BaseSeparada(baseTreino, baseTeste);
+        return new LeitorSkin(baseTreino, baseTeste);
     }
 }
