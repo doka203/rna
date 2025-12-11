@@ -77,14 +77,19 @@ public class RnaMain {
                         }
                         break;
                     case 6:
-                        double[][][] baseAbalone = LeitorAbalone.lerBaseOrdenada("RNA/data/abalone/abalone.data");
-                        LeitorAbalone baseSeparadaAbalone = LeitorAbalone.separarBase(baseAbalone);
-                        if (baseSeparadaAbalone != null) {
+                        double[][][] baseAbalone = LeitorAbalone.lerBase("RNA/data/abalone/abalone.data");
+                        LeitorAbalone baseSeparada = LeitorAbalone.separarBase(baseAbalone);
+                        if (baseSeparada != null) {
                             System.out.print("\nQuantidade de neurônios na camada intermediária (qtdH): ");
                             int qtdH = sc.nextInt();
+                            System.out.print("Informe a Taxa de Mutação (ex: 0,1): ");
+                            double taxaMutacao = sc.nextDouble();
+                            
+                            BalanceadorClasses balanceador = new BalanceadorClasses(taxaMutacao);
+                            double[][][] treinoBalanceado = balanceador.balancear(baseSeparada.baseTreino);
+                            
                             redeNeural = new Mlp(10, qtdH, 29);
-                            double[][] erros = treinar(redeNeural, baseSeparadaAbalone.baseTreino,
-                                    baseSeparadaAbalone.baseTeste, epocas);
+                            double[][] erros = treinar(redeNeural, treinoBalanceado, baseSeparada.baseTeste, epocas);
                             Arquivar.salvarErros(erros, "baseAbalone", qtdH);
                         }
                         break;

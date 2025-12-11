@@ -1,11 +1,14 @@
 package src;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class LeitorAbalone {
     public double[][][] baseTreino;
@@ -19,6 +22,7 @@ public class LeitorAbalone {
     public static double[][][] lerBase(String caminhoArquivo) {
         List<double[][]> baseList = new ArrayList<>();
 
+        // Constantes de Normalização
         double[] minValues = { 0.075000, 0.055000, 0.000000, 0.002000, 0.001000, 0.000500, 0.001500 };
         double[] maxValues = { 0.815000, 0.650000, 1.130000, 2.825500, 1.488000, 0.760000, 1.005000 };
 
@@ -46,7 +50,7 @@ public class LeitorAbalone {
                         } else {
                             // Normaliza os outros atributos numéricos
                             double valor = Double.parseDouble(valores[i]);
-                            entradas[i - 1] = normalizar(valor, minValues[i - 1], maxValues[i - 1]);
+                            entradas[i + 2] = normalizar(valor, minValues[i - 1], maxValues[i - 1]);
                         }
                     }
 
@@ -69,22 +73,44 @@ public class LeitorAbalone {
             return null;
         }
 
-        return baseList.toArray(new double[0][][]);
+        return filtrarClasses(baseList, 4).toArray(new double[0][][]);
     }
 
     // 4) Normalização Min-Max
     private static double normalizar(double valor, double min, double max) {
-        return (valor - min) / (max - min);
+        double res = (valor - min) / (max - min);
+        // Garante que fique entre 0 e 1
+        return Math.max(0.0, Math.min(1.0, res));
     }
 
-    public static double[][][] lerBaseOrdenada(String caminhoArquivo) {
-        double[][][] base = lerBase(caminhoArquivo);
-
-        if (base != null) {
-            // Ordena a base de dados pela coluna de saída (crescente)
-            Arrays.sort(base, (amostra1, amostra2) -> Double.compare(amostra1[1][0], amostra2[1][0]));
+    private static List<double[][]> filtrarClasses(List<double[][]> dados, int minAmostras) {
+        Map<Integer, Integer> contagem = new HashMap<>();
+        for (double[][] d : dados) {
+            int c = argmax(d[1]);
+            contagem.put(c, contagem.getOrDefault(c, 0) + 1);
         }
 
+        List<double[][]> classesFiltradas = new ArrayList<>();
+        int amostrasRemovidas = 0;
+
+        System.out.println("--- Filtragem de Classes (Min: " + minAmostras + ") ---");
+        for (double[][] d : dados) {
+            int c = argmax(d[1]);
+            if (contagem.get(c) >= minAmostras) {
+                classesFiltradas.add(d);
+            } else {
+                amostrasRemovidas++;
+            }
+        }
+        System.out.println("Amostras removidas: " + amostrasRemovidas + " | Restantes: " + classesFiltradas.size());
+        return classesFiltradas;
+    }
+
+    public static double[][][] lerBaseOrdenada(String path) {
+        double[][][] base = lerBase(path);
+        if (base != null) {
+            Arrays.sort(base, (amostra1, amostra2) -> Double.compare(argmax(amostra1[1]), argmax(amostra2[1])));
+        }
         return base;
     }
 
@@ -148,5 +174,15 @@ public class LeitorAbalone {
         double[][][] baseTeste = testeList.toArray(new double[0][][]);
 
         return new LeitorAbalone(baseTreino, baseTeste);
+    }
+
+    private static int argmax(double[] y) {
+        int max = 0;
+        for (int i = 1; i < y.length; i++) {
+            if (y[i] > y[max]) {
+                max = i;
+            }
+        }
+        return max;
     }
 }
